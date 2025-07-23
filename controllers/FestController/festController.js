@@ -20,35 +20,6 @@ const validateFestInput = (body) => {
     return errors;
 };
 
-// exports.createFest = async (req, res) => {
-//     try {
-//         const errors = validateFestInput(req.body);
-//         if (errors.length > 0) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Validation errors',
-//                 errors
-//             });
-//         }
-
-//         const fest = await Fest.create({
-//             ...req.body,
-//             adminId: req.user._id
-//         });
-
-//         return res.status(201).json({
-//             success: true,
-//             message: 'Fest created successfully',
-//             data: fest
-//         });
-//     } catch (error) {
-//         return res.status(400).json({
-//             success: false,
-//             message: 'Fest creation failed',
-//             error: error.message
-//         });
-//     }
-// };
 exports.createFest = async (req, res) => {
   try {
     const errors = validateFestInput(req.body);
@@ -163,48 +134,6 @@ exports.getFests = async (req, res) => {
     }
 };
 
-// exports.updateFest = async (req, res) => {
-//     try {
-//         const errors = validateFestInput(req.body);
-//         if (errors.length > 0) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Validation errors',
-//                 errors
-//             });
-//         }
-
-//         const user = req.user;
-//         const adminIdToMatch = user.role === 'Admin' ? user._id : user.adminId;
-
-
-//         const fest = await Fest.findOneAndUpdate(
-//             { _id: req.params.id, adminId: adminIdToMatch },
-//             { ...req.body, updatedBy: req.user._id }, // 👈 add this
-//             { new: true, runValidators: true }
-//         );
-
-
-//         if (!fest) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'Fest not found or unauthorized'
-//             });
-//         }
-
-//         return res.status(200).json({
-//             success: true,
-//             message: 'Fest updated successfully',
-//             data: fest
-//         });
-//     } catch (error) {
-//         return res.status(400).json({
-//             success: false,
-//             message: 'Failed to update fest',
-//             error: error.message
-//         });
-//     }
-// };
 exports.updateFest = async (req, res) => {
   try {
     const errors = validateFestInput(req.body);

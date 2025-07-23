@@ -6,6 +6,7 @@ const AdminauthRoutes = require('./routes/AdminauthRoutes.js');
 const authRoutes = require('./routes/Organization Routes/authRoutes.js')
 const userRoutes = require('./routes/Organization Routes/userRoutes.js')
 const festRoutes = require('./routes/FestRoutes/festRoutes.js');
+const festTicketRoutes = require('./routes/FestRoutes/festTicketRoutes.js');
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +29,7 @@ app.use('/superadmin/api/auth', AdminauthRoutes);
 app.use('/admin/api/auth',authRoutes)
 app.use('/user/api/',userRoutes)
 app.use('/api/fest', festRoutes);
+app.use('/api/festticket', festTicketRoutes);
 
 
 app.listen(PORT, () => {
