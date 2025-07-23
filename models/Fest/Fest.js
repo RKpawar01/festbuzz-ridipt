@@ -7,6 +7,7 @@ const festSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
   festName: { type: String, required: true },
   festType: { type: String, required: true },
@@ -76,20 +77,5 @@ const festSchema = new mongoose.Schema({
   }
 
 }, { timestamps: true });
-
-// Automatically update festStatus to 'Past' if endDate < today
-// festSchema.pre('find', function () {
-//   this.updateMany(
-//     { endDate: { $lt: new Date() }, festStatus: { $ne: 'Past' } },
-//     { $set: { festStatus: 'Past' } }
-//   ).exec();
-// });
-
-// festSchema.pre('findOne', function () {
-//   this.model.updateMany(
-//     { endDate: { $lt: new Date() }, festStatus: { $ne: 'Past' } },
-//     { $set: { festStatus: 'Past' } }
-//   ).exec();
-// });
 
 module.exports = mongoose.model('Fest', festSchema);

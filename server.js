@@ -19,6 +19,11 @@ connectDB(); // uses your separate DB file
 app.use(express.json());
 app.use(cors());
 
+// Home route
+app.get('/', (req, res) => {
+  res.send('Welcome to FestBuzz');
+});
+
 app.use('/superadmin/api/auth', AdminauthRoutes);
 app.use('/admin/api/auth',authRoutes)
 app.use('/user/api/',userRoutes)
