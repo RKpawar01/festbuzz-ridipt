@@ -41,6 +41,11 @@ const festTicketSchema = new mongoose.Schema({
   },
   endTime: {
     type: String
+  },
+   createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   }
 }, { timestamps: true });
 

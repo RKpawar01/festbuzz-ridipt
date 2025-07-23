@@ -3,15 +3,16 @@ module.exports = {
         canCreate: ['FestivalHead', 'EventManager', 'EventCoordinator', 'EventVolunteer'],
         routes: {
             '/api/user': ['GET', 'POST'],
-            '/api/fest': ['GET', 'POST', 'PATCH', 'DELETE']
+            '/api/fest': ['GET', 'POST', 'PATCH', 'DELETE'],
+            '/api/festticket': ['GET', 'POST']
 
         }
     },
     FestivalHead: {
         canCreate: ['EventManager', 'EventCoordinator', 'EventVolunteer'],
         routes: {
-            '/api/fest': ['GET', 'PATCH'],   
-            '/api/user': ['GET', 'POST']
+            '/api/fest': ['GET', 'PATCH'],
+            '/api/user': ['GET', 'POST'],
         }
     },
     EventManager: {
