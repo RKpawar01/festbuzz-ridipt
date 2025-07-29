@@ -7,7 +7,8 @@ const authRoutes = require('./routes/Organization Routes/authRoutes.js')
 const userRoutes = require('./routes/Organization Routes/userRoutes.js')
 const festRoutes = require('./routes/FestRoutes/festRoutes.js');
 const festTicketRoutes = require('./routes/FestRoutes/festTicketRoutes.js');
-const participantRoutes =require('./routes/ParticipantRoutes/participantRoutes.js')
+const participantRoutes = require('./routes/ParticipantRoutes/participantRoutes.js')
+const eventRoutes = require('./routes/EventsRoutes/eventRoutes.js')
 // Load environment variables
 dotenv.config();
 
@@ -26,13 +27,13 @@ app.get('/', (req, res) => {
 });
 
 app.use('/superadmin/api/auth', AdminauthRoutes);
-app.use('/admin/api/auth',authRoutes)
-app.use('/user/api/',userRoutes)
+app.use('/admin/api/auth', authRoutes)
+app.use('/user/api/', userRoutes)
 app.use('/api/fest', festRoutes);
 app.use('/api/festticket', festTicketRoutes);
-
+app.use('/api/event', eventRoutes)
 //Participants Routes
-app.use('/api/participant',participantRoutes)
+app.use('/api/participant', participantRoutes)
 
 
 app.listen(PORT, () => {
