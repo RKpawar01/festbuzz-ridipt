@@ -93,6 +93,25 @@ exports.publishEvent = async (req, res) => {
     }
 };
 
+exports.deleteEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.role === 'Admin' ? req.user._id : req.user.adminId;
+
+        // Find and delete event that belongs to this organization (adminId check is important)
+        const event = await Event.findOneAndDelete({ _id: id, adminId });
+
+        if (!event) {
+            return res.status(404).json({ success: false, message: 'Event not found or unauthorized access' });
+        }
+
+        res.status(200).json({ success: true, message: 'Event deleted successfully', event });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+
 
 
 
