@@ -9,6 +9,8 @@ const festRoutes = require('./routes/FestRoutes/festRoutes.js');
 const festTicketRoutes = require('./routes/FestRoutes/festTicketRoutes.js');
 const participantRoutes = require('./routes/ParticipantRoutes/participantRoutes.js')
 const eventRoutes = require('./routes/EventsRoutes/eventRoutes.js')
+const imageRoutes = require('./routes/s3bucket/ImageRoute.js');
+
 // Load environment variables
 dotenv.config();
 
@@ -16,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-connectDB(); // uses your separate DB file
+connectDB();
 
 app.use(express.json());
 app.use(cors());
@@ -32,8 +34,12 @@ app.use('/user/api/', userRoutes)
 app.use('/api/fest', festRoutes);
 app.use('/api/festticket', festTicketRoutes);
 app.use('/api/event', eventRoutes)
+
 //Participants Routes
 app.use('/api/participant', participantRoutes)
+
+//aws s3 bucket
+app.use('/api/images', imageRoutes);
 
 
 app.listen(PORT, () => {
