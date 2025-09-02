@@ -27,7 +27,7 @@ exports.createFest = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Validation errors',
-        errors
+        errors,
       });
     }
 
@@ -49,28 +49,12 @@ exports.createFest = async (req, res) => {
       linkedinUrl,
       youtubeAftermovie,
       festStatus,
-      sponsorNames,
-      sponsorTitles
+      logo,           // ✅ directly received as URL
+      photos = [],    // ✅ directly received as array of URLs
+      sponsors = [],  // ✅ directly received as array of objects { sponsorName, sponsorTitle, sponsorImage }
     } = req.body;
 
-    // Extract files from multer
-    const logo = req.files['logo']?.[0]?.path || '';
-    const photos = req.files['photos']?.map(file => file.path) || [];
-    const sponsorImages = req.files['sponsorImages']?.map(file => file.path) || [];
-
-    // Parse sponsors (assumes same order in form-data arrays)
-    let sponsors = [];
-    if (sponsorNames && sponsorTitles && sponsorImages.length > 0) {
-      const names = Array.isArray(sponsorNames) ? sponsorNames : [sponsorNames];
-      const titles = Array.isArray(sponsorTitles) ? sponsorTitles : [sponsorTitles];
-
-      sponsors = names.map((name, i) => ({
-        sponsorName: name,
-        sponsorTitle: titles[i] || '',
-        sponsorImage: sponsorImages[i] || ''
-      }));
-    }
-
+    // ✅ Save fest in DB
     const fest = await Fest.create({
       adminId: req.user._id,
       festName,
@@ -92,20 +76,20 @@ exports.createFest = async (req, res) => {
       logo,
       photos,
       sponsors,
-      festStatus
+      festStatus,
     });
 
     return res.status(201).json({
       success: true,
       message: 'Fest created successfully',
-      data: fest
+      data: fest,
     });
   } catch (error) {
-    console.error(error);
+    console.error('Fest creation error:', error);
     return res.status(500).json({
       success: false,
       message: 'Fest creation failed',
-      error: error.message
+      error: error.message,
     });
   }
 };

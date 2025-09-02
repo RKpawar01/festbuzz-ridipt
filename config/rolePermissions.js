@@ -11,7 +11,7 @@ module.exports = {
     FestivalHead: {
         canCreate: ['EventManager', 'EventCoordinator', 'EventVolunteer'],
         routes: {
-            '/api/fest': ['GET', 'PATCH'],
+            '/api/fest': ['GET', 'POST', 'PATCH', 'DELETE'],
             '/api/user': ['GET', 'POST'],
         }
     },
