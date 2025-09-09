@@ -22,8 +22,6 @@ const participantSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-
-    // 📌 Extended Fields (Required AFTER Signup)
     name: {
         type: String,
         trim: true

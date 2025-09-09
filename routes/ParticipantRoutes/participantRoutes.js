@@ -11,7 +11,6 @@ const {
 } = require('../../controllers/Participant/participantController.js');
 
 const authParticipant = require('../../middlewares/authParticipant.js');
-const participantUpload = require('../../middlewares/participantUpload.js');
 
 // 🔐 Register with OTP (static for now)
 router.post('/register', registerParticipant);
@@ -20,7 +19,7 @@ router.post('/register', registerParticipant);
 router.post('/login', loginParticipant);
 
 // 🔒 Profile completion (auth required)
-router.put('/complete-profile', authParticipant, participantUpload.single('profilePhoto'), completeParticipantProfile);
+router.put('/complete-profile', authParticipant, completeParticipantProfile);
 
 // 🔒 Get own profile
 router.get('/me', authParticipant, getParticipantProfile);

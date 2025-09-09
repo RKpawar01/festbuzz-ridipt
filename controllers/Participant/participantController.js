@@ -73,7 +73,7 @@ exports.loginParticipant = async (req, res) => {
   }
 };
 
-// @desc Update profile after signup
+// Update profile after signup
 exports.completeParticipantProfile = async (req, res) => {
   try {
     const participantId = req.participant._id;
@@ -84,11 +84,9 @@ exports.completeParticipantProfile = async (req, res) => {
       gender,
       state,
       city,
-      college
+      college,
+      profilePhoto // ✅ directly coming from S3 as URL
     } = req.body;
-
-    // File from Cloudinary
-    const profilePhoto = req.file?.path;
 
     if (!name || !contactNumber || !dob || !gender || !state || !city || !college || !profilePhoto) {
       return res.status(400).json({ success: false, message: 'All profile fields are mandatory' });
@@ -104,7 +102,7 @@ exports.completeParticipantProfile = async (req, res) => {
         state,
         city,
         college,
-        profilePhoto,
+        profilePhoto, // ✅ save S3 URL in DB
         profileCompleted: true
       },
       { new: true, runValidators: true, context: 'query' }
@@ -128,6 +126,7 @@ exports.completeParticipantProfile = async (req, res) => {
     });
   }
 };
+
 
 
 // @desc Get own profile
