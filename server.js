@@ -13,6 +13,7 @@ const imageRoutes = require('./routes/s3bucket/ImageRoute.js');
 const participantfestRoutes = require('./routes/ParticipantRoutes/participantfestRoutes.js')
 const participanteventRoutes = require('./routes/ParticipantRoutes/participanteventRoutes.js')
 const FestBookingRoutes = require('./routes/BookingRoutes/FestBookingRoutes.js')
+const eventBookingRoutes =require('./routes/BookingRoutes/eventBookingRoutes.js')
 dotenv.config();
 
 const app = express();
@@ -47,6 +48,9 @@ app.use('/api/participant/event', participanteventRoutes)
 
 //Participnat Fest Booking
 app.use('/api/fest/booking', FestBookingRoutes)
+
+//Participant Event Booking
+app.use('/api/event/booking',eventBookingRoutes)
 
 //aws s3 bucket
 app.use('/api/images', imageRoutes);
