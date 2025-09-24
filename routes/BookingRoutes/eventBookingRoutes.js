@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { createEventBooking } = require("../../controllers/Booking/eventBookingController.js");
+const { createEventBooking, getMyEventBookings, getMyTeamDetails,updateTeamMembers } = require("../../controllers/Booking/eventBookingController.js");
 const authParticipant = require('../../middlewares/authParticipant.js');
 
-// @route   POST /api/events/:eventId/book
-// @desc    Create Event Booking (Individual / Team)
-// @access  Private (Participant)
+router.get("/getmybookedevent", authParticipant, getMyEventBookings)
+router.get("/event/:eventId/my-team", authParticipant, getMyTeamDetails)
 router.post("/:eventId/book", authParticipant, createEventBooking);
-
+router.put("/event/:eventId/team/update",authParticipant,updateTeamMembers)
 module.exports = router;
