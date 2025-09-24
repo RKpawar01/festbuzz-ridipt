@@ -4,7 +4,7 @@ module.exports = {
         routes: {
             '/api/user': ['GET', 'POST'],
             '/api/fest': ['GET', 'POST', 'PATCH', 'DELETE'],
-            '/api/festticket': ['GET', 'POST']
+            '/api/festticket': ['GET', 'POST', 'PATCH', 'DELETE']
 
         }
     },
@@ -13,6 +13,8 @@ module.exports = {
         routes: {
             '/api/fest': ['GET', 'POST', 'PATCH', 'DELETE'],
             '/api/user': ['GET', 'POST'],
+            '/api/festticket': ['GET', 'POST', 'PATCH', 'DELETE']
+
         }
     },
     EventManager: {

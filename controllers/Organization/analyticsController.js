@@ -234,4 +234,61 @@ exports.getEventTeams = async (req, res) => {
 	}
 };
 
+// GET /admin/api/analytics/summary
+exports.getOrganizationSummary = async (req, res) => {
+	try {
+		const adminId = req.user.role === 'Admin' ? req.user._id : req.user.adminId;
+
+		// Fests pipeline
+		const festPipeline = [
+			{ $match: { adminId: new mongoose.Types.ObjectId(adminId) } },
+			{ $lookup: { from: 'festbookings', localField: '_id', foreignField: 'festId', as: 'bookings' } },
+			{ $addFields: { ticketsSold: { $size: '$bookings' } } },
+			{ $project: { _id: 1, festName: 1, festStatus: 1, startDate: 1, endDate: 1, city: 1, state: 1, ticketsSold: 1 } }
+		];
+		const festSummaries = await Fest.aggregate(festPipeline);
+		const festTotals = festSummaries.reduce((sum, f) => sum + (f.ticketsSold || 0), 0);
+
+		// Events pipeline
+		const eventPipeline = [
+			{ $match: { adminId: new mongoose.Types.ObjectId(adminId) } },
+			{ $lookup: { from: 'eventbookings', localField: '_id', foreignField: 'eventId', as: 'bookings' } },
+			{
+				$addFields: {
+					ticketsSold: { $size: '$bookings' },
+					individualCount: { $size: { $filter: { input: '$bookings', as: 'b', cond: { $eq: ['$$b.eventType', 'Individual'] } } } },
+					teamCount: { $size: { $filter: { input: '$bookings', as: 'b', cond: { $eq: ['$$b.eventType', 'Team'] } } } }
+				}
+			},
+			{ $project: { _id: 1, eventName: 1, eventType: 1, fest: 1, status: 1, ticketsSold: 1, individualCount: 1, teamCount: 1 } }
+		];
+		const eventSummaries = await Event.aggregate(eventPipeline);
+		const eventTotals = eventSummaries.reduce((acc, e) => {
+			acc.ticketsSold += e.ticketsSold || 0;
+			acc.individual += e.individualCount || 0;
+			acc.team += e.teamCount || 0;
+			return acc;
+		}, { ticketsSold: 0, individual: 0, team: 0 });
+
+		return res.status(200).json({
+			success: true,
+			organization: { adminId },
+			fests: {
+				totalFests: festSummaries.length,
+				totalTicketsSold: festTotals,
+				items: festSummaries
+			},
+			events: {
+				totalEvents: eventSummaries.length,
+				ticketsSold: eventTotals.ticketsSold,
+				individualBookings: eventTotals.individual,
+				teamBookings: eventTotals.team,
+				items: eventSummaries
+			}
+		});
+	} catch (err) {
+		return res.status(500).json({ success: false, message: 'Failed to fetch organization summary', error: err.message });
+	}
+};
+
 
