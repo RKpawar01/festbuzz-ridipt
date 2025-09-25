@@ -5,6 +5,7 @@ const router = express.Router();
 
 const {
     registerParticipant,
+    verifySignupOTP,
     loginParticipant,
     completeParticipantProfile,
     getParticipantProfile
@@ -12,8 +13,9 @@ const {
 
 const authParticipant = require('../../middlewares/authParticipant.js');
 
-// 🔐 Register with OTP (static for now)
+// 🔐 Register - validate & send OTP, then verify
 router.post('/register', registerParticipant);
+router.post('/register/verify', verifySignupOTP);
 
 // 🔓 Login without OTP
 router.post('/login', loginParticipant);

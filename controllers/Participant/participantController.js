@@ -1,24 +1,18 @@
 // controllers/participantController.js
 
 const Participant = require('../../models/Participant/Participant.js');
+const ParticipantOTP = require('../../models/Participant/ParticipantOTP.js');
 const generateToken = require('../../utils/generateToken.js');
 const bcrypt = require('bcryptjs');
+const sendEmail = require('../../utils/email.js');
 
-// @desc Register participant
+// Step 1: Register - validate and send OTP
 exports.registerParticipant = async (req, res) => {
   try {
-    const { email, password, confirmPassword, otp } = req.body;
+    const { email, password, confirmPassword } = req.body;
 
-    // Static OTP for now
-    const STATIC_OTP = '123456';
-
-    // Validations
-    if (!email || !password || !confirmPassword || !otp) {
+    if (!email || !password || !confirmPassword) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
-    }
-
-    if (otp !== STATIC_OTP) {
-      return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
 
     if (password !== confirmPassword) {
@@ -30,7 +24,52 @@ exports.registerParticipant = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Participant already registered with this email' });
     }
 
-    const newParticipant = await Participant.create({ email, password, otp });
+    // const otp = (Math.floor(100000 + Math.random() * 900000)).toString();
+    const otp = "123456"; // 🔹 Hardcoded for development
+
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await ParticipantOTP.findOneAndUpdate(
+      { email },
+      { email, otp, expiresAt },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    const html = `<p>Your FestBuzz verification code is <b>${otp}</b>. It expires in 10 minutes.</p>`;
+    // await sendEmail(email, 'Verify your email - FestBuzz', html);
+
+    return res.status(200).json({ success: true, message: 'OTP sent to email. Please verify to complete signup.' });
+  } catch (error) {
+    console.error('Register (send OTP) Error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send OTP', error: error.message });
+  }
+};
+
+// Step 2: Verify OTP and create account
+exports.verifySignupOTP = async (req, res) => {
+  try {
+    const { email, password, confirmPassword, otp } = req.body;
+
+    if (!email || !password || !confirmPassword || !otp) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Passwords do not match' });
+    }
+
+    const existingUser = await Participant.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: 'Participant already registered with this email' });
+    }
+
+    const otpDoc = await ParticipantOTP.findOne({ email });
+    if (!otpDoc) return res.status(400).json({ success: false, message: 'OTP not requested' });
+    if (otpDoc.expiresAt < new Date()) return res.status(400).json({ success: false, message: 'OTP expired' });
+    if (otpDoc.otp !== otp) return res.status(400).json({ success: false, message: 'Invalid OTP' });
+
+    const newParticipant = await Participant.create({ email, password, otp: 'verified' });
+    await ParticipantOTP.deleteOne({ _id: otpDoc._id });
 
     return res.status(201).json({
       success: true,
@@ -38,7 +77,7 @@ exports.registerParticipant = async (req, res) => {
       token: generateToken(newParticipant._id)
     });
   } catch (error) {
-    console.error('Register Error:', error);
+    console.error('Verify OTP Error:', error);
     return res.status(500).json({ success: false, message: 'Registration failed', error: error.message });
   }
 };
