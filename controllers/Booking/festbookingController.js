@@ -5,7 +5,8 @@ const FestTicket = require("../../models/Ticket/FestTicketModel.js");
 exports.createBooking = async (req, res) => {
   try {
     const { festId, ticketId } = req.params;
-    const participantId = req.participant; // from JWT (participant auth)
+    const participantDoc = req.participant; // from JWT (participant auth)
+    const participantId = participantDoc._id;
 
     const {
       name,
@@ -63,6 +64,32 @@ exports.createBooking = async (req, res) => {
     });
 
     await booking.save();
+
+    // Generate QR and email (non-blocking but awaited here to ensure delivery)
+    try {
+      const { generateQrPngBuffer } = require("../../utils/qr.js");
+      const sendEmail = require("../../utils/email.js");
+
+      const payload = { type: "fest", bookingId: booking._id.toString(), participantId: participantId.toString() };
+      const qrPng = await generateQrPngBuffer(payload);
+      booking.qrIssuedAt = new Date();
+      await booking.save();
+
+      const html = `
+        <h3>Fest Booking Confirmed</h3>
+        <p>Dear ${name || participantDoc.name || "Participant"},</p>
+        <p>Your booking for <b>${fest.festName}</b> is created.</p>
+        <p>Ticket: <b>${ticket.ticketName}</b> (${ticket.festFeeType}${ticket.price ? ` - Rs ${ticket.price}` : ""})</p>
+        <p>City: ${fest.city || ""}, State: ${fest.state || ""}</p>
+        <p>Please present the attached QR at entry.</p>
+      `;
+
+      await sendEmail(participantDoc.email, `QR for ${fest.festName} - FestBuzz`, html, [
+        { filename: `fest-${fest._id}-booking-${booking._id}.png`, content: qrPng, contentType: "image/png" }
+      ]);
+    } catch (e) {
+      console.error("QR/email (fest) failed:", e.message);
+    }
 
     res.status(201).json({ success: true, message: "Booking successful", booking });
   } catch (err) {

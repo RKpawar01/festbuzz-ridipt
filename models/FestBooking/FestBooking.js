@@ -2,7 +2,7 @@
 const mongoose = require("mongoose");
 
 const festbookingSchema = new mongoose.Schema({
-   festId: {
+  festId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Fest",
     required: true
@@ -45,7 +45,13 @@ const festbookingSchema = new mongoose.Schema({
     type: String,
     enum: ["Not Required", "Pending", "Paid", "Failed"],
     default: "Not Required"
-  }
+  },
+
+  // QR and check-in tracking
+  qrIssuedAt: { type: Date },
+  checkedIn: { type: Boolean, default: false },
+  checkedInAt: { type: Date },
+  checkedInBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
 
 module.exports = mongoose.model("FestBooking", festbookingSchema);

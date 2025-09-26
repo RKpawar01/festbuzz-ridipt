@@ -49,7 +49,13 @@ const eventBookingSchema = new mongoose.Schema({
     type: String,
     enum: ["Not Required", "Pending", "Paid", "Failed"],
     default: "Not Required"
-  }
+  },
+
+  // QR and check-in tracking
+  qrIssuedAt: { type: Date },
+  checkedIn: { type: Boolean, default: false },
+  checkedInAt: { type: Date },
+  checkedInBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
 
 // Generate team code

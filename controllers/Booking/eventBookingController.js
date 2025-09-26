@@ -5,7 +5,8 @@ const EventBooking = require("../../models/EventBooking/EventBooking.js");
 exports.createEventBooking = async (req, res) => {
   try {
     const { eventId } = req.params;
-    const participantId = req.participant; // from JWT middleware
+    const participantDoc = req.participant; // from JWT middleware
+    const participantId = participantDoc._id;
     const { type, isTeamLeader, teamName, teamCode, additionalAnswer1, additionalAnswer2 } = req.body;
 
     // 1️⃣ Check event exists
@@ -40,6 +41,32 @@ exports.createEventBooking = async (req, res) => {
       });
 
       await booking.save();
+
+      // generate QR + email
+      try {
+        const { generateQrPngBuffer } = require("../../utils/qr.js");
+        const sendEmail = require("../../utils/email.js");
+
+        const payload = { type: "event", bookingId: booking._id.toString(), participantId: participantId.toString() };
+        const qrPng = await generateQrPngBuffer(payload);
+        booking.qrIssuedAt = new Date();
+        await booking.save();
+
+        const html = `
+          <h3>Event Booking Confirmed</h3>
+          <p>Dear ${participantDoc.name || "Participant"},</p>
+          <p>Your booking for <b>${event.name}</b> (${event.eventType}) is created.</p>
+          <p>Fest: ${event.fest?.toString() || ""}</p>
+          <p>Please present the attached QR at entry.</p>
+        `;
+
+        await sendEmail(participantDoc.email, `QR for ${event.name} - FestBuzz`, html, [
+          { filename: `event-${event._id}-booking-${booking._id}.png`, content: qrPng, contentType: "image/png" }
+        ]);
+      } catch (e) {
+        console.error("QR/email (event individual) failed:", e.message);
+      }
+
       return res.status(201).json({ success: true, message: "Individual event booked", booking });
     }
 
@@ -65,6 +92,29 @@ exports.createEventBooking = async (req, res) => {
         });
 
         await booking.save();
+
+        // QR + email to leader
+        try {
+          const { generateQrPngBuffer } = require("../../utils/qr.js");
+          const sendEmail = require("../../utils/email.js");
+          const payload = { type: "event", bookingId: booking._id.toString(), participantId: participantId.toString() };
+          const qrPng = await generateQrPngBuffer(payload);
+          booking.qrIssuedAt = new Date();
+          await booking.save();
+          const html = `
+            <h3>Team Created for Event</h3>
+            <p>Dear ${participantDoc.name || "Participant"},</p>
+            <p>Your team <b>${teamName}</b> for <b>${event.name}</b> is created.</p>
+            <p>Team Code: <b>${code}</b></p>
+            <p>Share the code with your teammates. Present attached QR at entry.</p>
+          `;
+          await sendEmail(participantDoc.email, `Team QR for ${event.name} - FestBuzz`, html, [
+            { filename: `event-${event._id}-booking-${booking._id}.png`, content: qrPng, contentType: "image/png" }
+          ]);
+        } catch (e) {
+          console.error("QR/email (event team leader) failed:", e.message);
+        }
+
         return res.status(201).json({ success: true, message: "Team created successfully", booking });
       } else {
         // 🔒 Optional check: prevent joining multiple teams for the same event
@@ -176,7 +226,7 @@ exports.updateTeamMembers = async (req, res) => {
   try {
     const participantId = req.participant; // ✅ from JWT middleware (current user)
     const { eventId } = req.params;
-    const { action, memberId } = req.body; 
+    const { action, memberId } = req.body;
     // action = "add" | "remove"
 
     // 1️⃣ Check if user is team leader

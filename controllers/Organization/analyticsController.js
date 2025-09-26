@@ -243,11 +243,27 @@ exports.getOrganizationSummary = async (req, res) => {
 		const festPipeline = [
 			{ $match: { adminId: new mongoose.Types.ObjectId(adminId) } },
 			{ $lookup: { from: 'festbookings', localField: '_id', foreignField: 'festId', as: 'bookings' } },
-			{ $addFields: { ticketsSold: { $size: '$bookings' } } },
-			{ $project: { _id: 1, festName: 1, festStatus: 1, startDate: 1, endDate: 1, city: 1, state: 1, ticketsSold: 1 } }
+			{ $addFields: {
+					ticketsSold: { $size: '$bookings' },
+					checkedInCount: {
+						$size: {
+							$filter: {
+								input: '$bookings',
+								as: 'b',
+								cond: { $eq: ['$$b.checkedIn', true] }
+							}
+						}
+					}
+				}
+			},
+			{ $project: { _id: 1, festName: 1, festStatus: 1, startDate: 1, endDate: 1, city: 1, state: 1, ticketsSold: 1, checkedInCount: 1 } }
 		];
 		const festSummaries = await Fest.aggregate(festPipeline);
-		const festTotals = festSummaries.reduce((sum, f) => sum + (f.ticketsSold || 0), 0);
+		const festTotals = festSummaries.reduce((acc, f) => {
+			acc.ticketsSold += f.ticketsSold || 0;
+			acc.checkedIn += f.checkedInCount || 0;
+			return acc;
+		}, { ticketsSold: 0, checkedIn: 0 });
 
 		// Events pipeline
 		const eventPipeline = [
@@ -257,25 +273,28 @@ exports.getOrganizationSummary = async (req, res) => {
 				$addFields: {
 					ticketsSold: { $size: '$bookings' },
 					individualCount: { $size: { $filter: { input: '$bookings', as: 'b', cond: { $eq: ['$$b.eventType', 'Individual'] } } } },
-					teamCount: { $size: { $filter: { input: '$bookings', as: 'b', cond: { $eq: ['$$b.eventType', 'Team'] } } } }
+					teamCount: { $size: { $filter: { input: '$bookings', as: 'b', cond: { $eq: ['$$b.eventType', 'Team'] } } } },
+					checkedInCount: { $size: { $filter: { input: '$bookings', as: 'b', cond: { $eq: ['$$b.checkedIn', true] } } } }
 				}
 			},
-			{ $project: { _id: 1, eventName: 1, eventType: 1, fest: 1, status: 1, ticketsSold: 1, individualCount: 1, teamCount: 1 } }
+			{ $project: { _id: 1, eventName: 1, eventType: 1, fest: 1, status: 1, ticketsSold: 1, individualCount: 1, teamCount: 1, checkedInCount: 1 } }
 		];
 		const eventSummaries = await Event.aggregate(eventPipeline);
 		const eventTotals = eventSummaries.reduce((acc, e) => {
 			acc.ticketsSold += e.ticketsSold || 0;
 			acc.individual += e.individualCount || 0;
 			acc.team += e.teamCount || 0;
+			acc.checkedIn += e.checkedInCount || 0;
 			return acc;
-		}, { ticketsSold: 0, individual: 0, team: 0 });
+		}, { ticketsSold: 0, individual: 0, team: 0, checkedIn: 0 });
 
 		return res.status(200).json({
 			success: true,
 			organization: { adminId },
 			fests: {
 				totalFests: festSummaries.length,
-				totalTicketsSold: festTotals,
+				totalTicketsSold: festTotals.ticketsSold,
+				totalCheckedIn: festTotals.checkedIn,
 				items: festSummaries
 			},
 			events: {
@@ -283,6 +302,7 @@ exports.getOrganizationSummary = async (req, res) => {
 				ticketsSold: eventTotals.ticketsSold,
 				individualBookings: eventTotals.individual,
 				teamBookings: eventTotals.team,
+				checkedIn: eventTotals.checkedIn,
 				items: eventSummaries
 			}
 		});
